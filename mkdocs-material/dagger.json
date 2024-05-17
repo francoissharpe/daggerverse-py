@@ -1,0 +1,6 @@
+{
+  "name": "mkdocs-material",
+  "sdk": "python",
+  "source": "dagger",
+  "engineVersion": "v0.11.4"
+}
