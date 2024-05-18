@@ -66,9 +66,19 @@ These steps are for when you want to develop a new module.
     ```bash
     pip install -e ./sdk
     ```
-   
+
+## Other
+
+### Installing module as a dependency
+
+```shell
+# In the module directory
+dagger install github.com/francoissharpe/daggerverse-python/python@main
+```
+
 ## References
 
 - [Dagger - Developing with Python](https://docs.dagger.io/manuals/developer/python)
 - [Dagger - Developer Manual](https://docs.dagger.io/manuals/developer)
+- [Dagger - Dependencies](https://docs.dagger.io/manuals/developer/dependencies)
 - [Dagger - User Guide](https://docs.dagger.io/manuals/user)

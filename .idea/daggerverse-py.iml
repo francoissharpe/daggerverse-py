@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/python/dagger/sdk/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/mkdocs-material/dagger/.mkdocs-material-venv" />
+      <excludeFolder url="file://$MODULE_DIR$/python/dagger/.python-venv" />
+      <excludeFolder url="file://$MODULE_DIR$/pythonl/dagger/.python-venv" />
+    </content>
+    <orderEntry type="jdk" jdkName="Python 3.11 (daggerverse-py) (3)" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="format" value="PLAIN" />
+    <option name="myDocStringFormat" value="Plain" />
+  </component>
+</module>
