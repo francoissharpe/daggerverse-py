@@ -1,2 +1,6 @@
+# https://docs.dagger.io/manuals/developer/python/820256/module-structure
+
 [project]
+name = "main"
 requires-python = ">=3.11"
+dependencies = []
