@@ -1,37 +1,72 @@
-"""A generated module for Twine functions
-
-This module has been generated via dagger init and serves as a reference to
-basic module structure as you get started with Dagger.
-
-Two functions have been pre-created. You can modify, delete, or add to them,
-as needed. They demonstrate usage of arguments and return types using simple
-echo and grep commands. The functions can be called from the dagger CLI or
-from one of the SDKs.
-
-The first line in this comment block is a short description line and the
-rest is a long description with more detail on the module's purpose or usage,
-if appropriate. All modules should have a short description.
-"""
+"""A dagger module for the Twine utility."""
+import dataclasses
+import time
+from typing import Annotated, Self
 
 import dagger
-from dagger import dag, function, object_type
+from dagger import dag, Doc, function, object_type
+
+DIST_DIR = "/dist"
 
 
 @object_type
 class Twine:
-    @function
-    def container_echo(self, string_arg: str) -> dagger.Container:
-        """Returns a container that echoes whatever string argument is provided"""
-        return dag.container().from_("alpine:latest").with_exec(["echo", string_arg])
+    ctr: dagger.Container | None = dataclasses.field(default=None, init=False)
+    force_upload: Annotated[bool, Doc("Whether to force upload by disabling dagger cache")] = False
+
+    def __force_upload(self, ctr: dagger.Container) -> dagger.Container:
+        if self.force_upload:
+            return ctr.with_env_variable("CACHE_BUSTER", str(time.time()))
 
     @function
-    async def grep_dir(self, directory_arg: dagger.Directory, pattern: str) -> str:
-        """Returns lines that match a pattern in the files of the provided Directory"""
-        return await (
-            dag.container()
-            .from_("alpine:latest")
-            .with_mounted_directory("/mnt", directory_arg)
-            .with_workdir("/mnt")
-            .with_exec(["grep", "-R", pattern, "."])
-            .stdout()
+    def container(self) -> dagger.Container:
+        return self.ctr
+
+    @function
+    async def do(self) -> dagger.Container:
+        """Force execution of the container."""
+        return await self.ctr.sync()
+
+    @function
+    async def upload(
+            self,
+            username: Annotated[dagger.Secret, Doc("Username for the PyPi repository")],
+            password: Annotated[dagger.Secret, Doc("Password for the PyPi repository")],
+            dist: Annotated[dagger.Directory, Doc("Directory containing the built artifacts")],
+            repository: Annotated[
+                str, Doc("URL of the PyPi repository to upload to")] = "https://test.pypi.org/legacy/",
+            ca_bundle: Annotated[dagger.File | None, Doc("Path to the CA certificate file")] = None,
+            pip_index_url: Annotated[str, Doc("URL of the pip index")] = "https://pypi.org/simple",
+            twine_version: Annotated[str, Doc("Version of twine to install")] = "5.0.0",
+    ) -> Self:
+        """Upload the artifacts in the 'dist' directory to a PyPi registry"""
+
+        install_twine_cmd = f"pip install twine=={twine_version}".split(" ")
+        upload_cmd = (
+            f"python -m twine upload "
+            f"--non-interactive "
+            f"--disable-progress-bar "
+            f"--skip-existing "
+            f"--repository-url "
+            f"{repository} {DIST_DIR}/*"
+        ).split("")
+
+        ctr = (
+            dag
+            .python()
+            .with_base(
+                image="python:3.11-slim",
+                ca_bundle=ca_bundle,
+                pip_index_url=pip_index_url,
+            )
+            .with_pip()
+            .container()
+            .with_exec(install_twine_cmd)
+            .with_secret_variable("TWINE_USERNAME", username)
+            .with_secret_variable("TWINE_PASSWORD", password)
+            .with_mounted_directory(DIST_DIR, dist)
+            .with_(self.__force_upload)
+            .with_exec(upload_cmd)
         )
+        self.ctr = ctr
+        return self

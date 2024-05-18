@@ -1,6 +1,12 @@
 {
   "name": "twine",
   "sdk": "python",
+  "dependencies": [
+    {
+      "name": "python",
+      "source": "github.com/francoissharpe/daggerverse-py/python@b05ec48c41f5643c18c096d4d7d1a610741b01a8"
+    }
+  ],
   "source": "dagger",
   "engineVersion": "v0.11.4"
 }
