@@ -1,4 +1,5 @@
 """A dagger module for the Twine utility."""
+
 import dataclasses
 import time
 from typing import Annotated, Self
@@ -29,15 +30,14 @@ class Twine:
 
     @function
     async def upload(
-            self,
-            username: Annotated[dagger.Secret, Doc("Username for the PyPi repository")],
-            password: Annotated[dagger.Secret, Doc("Password for the PyPi repository")],
-            dist: Annotated[dagger.Directory, Doc("Directory containing the built artifacts")],
-            repository: Annotated[
-                str, Doc("URL of the PyPi repository to upload to")] = "https://test.pypi.org/legacy/",
-            ca_bundle: Annotated[dagger.File | None, Doc("Path to the CA certificate file")] = None,
-            pip_index_url: Annotated[str, Doc("URL of the pip index")] = "https://pypi.org/simple",
-            twine_version: Annotated[str, Doc("Version of twine to install")] = "5.0.0",
+        self,
+        username: Annotated[dagger.Secret, Doc("Username for the PyPi repository")],
+        password: Annotated[dagger.Secret, Doc("Password for the PyPi repository")],
+        dist: Annotated[dagger.Directory, Doc("Directory containing the built artifacts")],
+        repository: Annotated[str, Doc("URL of the PyPi repository to upload to")] = "https://test.pypi.org/legacy/",
+        ca_bundle: Annotated[dagger.File | None, Doc("Path to the CA certificate file")] = None,
+        pip_index_url: Annotated[str, Doc("URL of the pip index")] = "https://pypi.org/simple",
+        twine_version: Annotated[str, Doc("Version of twine to install")] = "5.0.0",
     ) -> Self:
         """Upload the artifacts in the 'dist' directory to a PyPi registry"""
 
@@ -52,8 +52,7 @@ class Twine:
         ).split("")
 
         ctr = (
-            dag
-            .python()
+            dag.python()
             .with_base(
                 image="python:3.11-slim",
                 ca_bundle=ca_bundle,

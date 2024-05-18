@@ -12,6 +12,7 @@ The first line in this comment block is a short description line and the
 rest is a long description with more detail on the module's purpose or usage,
 if appropriate. All modules should have a short description.
 """
+
 import dataclasses
 import time
 from typing import Annotated, Self
@@ -48,69 +49,43 @@ class Python:
 
     @function
     def with_base(
-            self,
-            image: Annotated[
-                str, Doc("The Docker image to use for the container")
-            ] = "python:3.11-bullseye",
-            cache_enabled: Annotated[
-                bool, Doc("Whether to enable caching")
-            ] = True,
-            packages: Annotated[
-                list[str] | None, Doc("Additional APT packages to install")
-            ] = None,
-            commands: Annotated[
-                list[str] | None, Doc(
-                    "Additional commands to run in the container. This is done after installing the APT packages.")
-            ] = None,
-            ca_bundle: Annotated[
-                dagger.File | None, Doc("CA certificate bundle")
-            ] = None,
-            pip_index_url: Annotated[
-                str, Doc("URL of the Python package index")
-            ] = "https://pypi.org/simple",
-            http_proxy: Annotated[
-                str | None, Doc("HTTP proxy URL")
-            ] = None,
-            https_proxy: Annotated[
-                str | None, Doc("HTTPS proxy URL")
-            ] = None,
-            no_proxy: Annotated[
-                str | None, Doc("Comma-separated list of URLs to exclude from proxying")
-            ] = None,
+        self,
+        image: Annotated[str, Doc("The Docker image to use for the container")] = "python:3.11-bullseye",
+        cache_enabled: Annotated[bool, Doc("Whether to enable caching")] = True,
+        packages: Annotated[list[str] | None, Doc("Additional APT packages to install")] = None,
+        commands: Annotated[
+            list[str] | None,
+            Doc("Additional commands to run in the container. This is done after installing the APT packages."),
+        ] = None,
+        ca_bundle: Annotated[dagger.File | None, Doc("CA certificate bundle")] = None,
+        pip_index_url: Annotated[str, Doc("URL of the Python package index")] = "https://pypi.org/simple",
+        http_proxy: Annotated[str | None, Doc("HTTP proxy URL")] = None,
+        https_proxy: Annotated[str | None, Doc("HTTPS proxy URL")] = None,
+        no_proxy: Annotated[str | None, Doc("Comma-separated list of URLs to exclude from proxying")] = None,
     ) -> Self:
         """Returns a container with the specified base image and configuration"""
 
         self.ctr = (
             dag.pipeline("python-base")
-            .container().from_(image)
+            .container()
+            .from_(image)
             .with_(self.with_default_python_env_variables)
             .with_env_variable("PIP_INDEX_URL", pip_index_url)
         )
 
         if http_proxy is not None:
-            self.ctr = (
-                self.ctr
-                .with_env_variable("http_proxy", http_proxy)
-                .with_env_variable("HTTP_PROXY", http_proxy)
-            )
+            self.ctr = self.ctr.with_env_variable("http_proxy", http_proxy).with_env_variable("HTTP_PROXY", http_proxy)
         if https_proxy is not None:
-            self.ctr = (
-                self.ctr
-                .with_env_variable("https_proxy", https_proxy)
-                .with_env_variable("HTTPS_PROXY", https_proxy)
+            self.ctr = self.ctr.with_env_variable("https_proxy", https_proxy).with_env_variable(
+                "HTTPS_PROXY", https_proxy
             )
 
         if no_proxy is not None:
-            self.ctr = (
-                self.ctr
-                .with_env_variable("no_proxy", no_proxy)
-                .with_env_variable("NO_PROXY", no_proxy)
-            )
+            self.ctr = self.ctr.with_env_variable("no_proxy", no_proxy).with_env_variable("NO_PROXY", no_proxy)
 
         if ca_bundle is not None:
             self.ctr = (
-                self.ctr
-                .with_file(CA_BUNDLE_PATH, ca_bundle)
+                self.ctr.with_file(CA_BUNDLE_PATH, ca_bundle)
                 .with_env_variable("REQUESTS_CA_BUNDLE", CA_BUNDLE_PATH)
                 .with_env_variable("GRPC_DEFAULT_SSL_ROOTS_FILE_PATH", CA_BUNDLE_PATH)
                 .with_env_variable("CURL_CA_BUNDLE", CA_BUNDLE_PATH)
@@ -127,8 +102,7 @@ class Python:
             poetry_cache = dag.cache_volume("poetry-cache")
 
             self.ctr = (
-                self.ctr
-                .with_env_variable("PIP_CACHE_DIR", pip_cache_dir)
+                self.ctr.with_env_variable("PIP_CACHE_DIR", pip_cache_dir)
                 .with_env_variable("POETRY_CACHE_DIR", poetry_cache_dir)
                 .with_mounted_cache(apt_cache_dir, apt_cache)
                 .with_mounted_cache(pip_cache_dir, pip_cache)
@@ -136,16 +110,13 @@ class Python:
             )
 
         if packages is not None and len(packages) > 0:
-            self.ctr = (
-                self.ctr
-                .with_exec(
-                    sh_dash_c(
-                        [
-                            "apt-get update",
-                            "apt-get install -yqq --no-install-recommends " + " ".join(packages),
-                            "rm -rf /var/lib/apt/lists/*"
-                        ]
-                    )
+            self.ctr = self.ctr.with_exec(
+                sh_dash_c(
+                    [
+                        "apt-get update",
+                        "apt-get install -yqq --no-install-recommends " + " ".join(packages),
+                        "rm -rf /var/lib/apt/lists/*",
+                    ]
                 )
             )
 
@@ -166,9 +137,9 @@ class Python:
 
     @function
     def with_poetry(
-            self,
-            version: Annotated[str, Doc("Version of poetry to install")] = "1.8.3",
-            plugins: Annotated[list[str] | None, Doc("Additional poetry plugins to install")] = None,
+        self,
+        version: Annotated[str, Doc("Version of poetry to install")] = "1.8.3",
+        plugins: Annotated[list[str] | None, Doc("Additional poetry plugins to install")] = None,
     ) -> Self:
         """Returns a container with the given version of poetry installed"""
         # TODO: Review how to install poetry + plugins properly
@@ -188,9 +159,9 @@ class Python:
 
     @function
     def with_pypa_build(
-            self,
-            src: Annotated[dagger.Directory | None, Doc("Directory containing the source code")],
-            build_version: Annotated[str, Doc("Version of pypa-build to install")] = "1.2.1",
+        self,
+        src: Annotated[dagger.Directory | None, Doc("Directory containing the source code")],
+        build_version: Annotated[str, Doc("Version of pypa-build to install")] = "1.2.1",
     ) -> Self:
         """Returns a directory with the built artifacts.
 
@@ -206,14 +177,13 @@ class Python:
 
     @function
     def with_twine_upload(
-            self,
-            username: Annotated[dagger.Secret, Doc("Username for the PyPi repository")],
-            password: Annotated[dagger.Secret, Doc("Password for the PyPi repository")],
-            dist: Annotated[dagger.Directory | None, Doc("Directory containing the built artifacts")] = None,
-            repository: Annotated[
-                str, Doc("URL of the PyPi repository to upload to")] = "https://test.pypi.org/legacy/",
-            disable_cache: Annotated[bool, Doc("Whether to disable caching to force upload")] = False,
-            twine_version: Annotated[str, Doc("Version of twine to install")] = "5.0.0",
+        self,
+        username: Annotated[dagger.Secret, Doc("Username for the PyPi repository")],
+        password: Annotated[dagger.Secret, Doc("Password for the PyPi repository")],
+        dist: Annotated[dagger.Directory | None, Doc("Directory containing the built artifacts")] = None,
+        repository: Annotated[str, Doc("URL of the PyPi repository to upload to")] = "https://test.pypi.org/legacy/",
+        disable_cache: Annotated[bool, Doc("Whether to disable caching to force upload")] = False,
+        twine_version: Annotated[str, Doc("Version of twine to install")] = "5.0.0",
     ) -> Self:
         """Upload the artifacts in the 'dist' directory to a PyPi registry"""
         self.ctr = (
@@ -229,18 +199,16 @@ class Python:
         if disable_cache:
             self.ctr = self.ctr.with_env_variable("CACHE_BUSTER", str(time.time()))
 
-        self.ctr = (
-            self.ctr.with_exec(
-                sh_dash_c(
-                    [
-                        f"python -m twine upload "
-                        f"--non-interactive "
-                        f"--disable-progress-bar "
-                        f"--skip-existing "
-                        f"--repository-url "
-                        f"{repository} {DIST_DIR}/*"
-                    ]
-                )
+        self.ctr = self.ctr.with_exec(
+            sh_dash_c(
+                [
+                    f"python -m twine upload "
+                    f"--non-interactive "
+                    f"--disable-progress-bar "
+                    f"--skip-existing "
+                    f"--repository-url "
+                    f"{repository} {DIST_DIR}/*"
+                ]
             )
         )
         return self

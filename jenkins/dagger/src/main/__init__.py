@@ -12,6 +12,7 @@ The first line in this comment block is a short description line and the
 rest is a long description with more detail on the module's purpose or usage,
 if appropriate. All modules should have a short description.
 """
+
 import dataclasses
 import random
 import string
@@ -27,15 +28,18 @@ class Jenkins:
 
     @function
     def with_base(
-            self,
-            image: Annotated[str, Doc("The Docker image to use for the container")] = "jenkins/jenkins:lts-jdk17",
-            plugins_file: Annotated[dagger.File | None, Doc("A file with the jenkins plugins to install")] = None,
-            casc_file: Annotated[
-                dagger.File | None, Doc("A file with the Jenkins Configuration as Code (JCasC)")] = None,
-            ca_files: Annotated[
-                list[dagger.File] | None, Doc(
-                    "Additional CA certificate files to use for the Jenkins server")] = None,
-            port: Annotated[int, Doc("The port to expose the Jenkins server on")] = 8080,
+        self,
+        image: Annotated[str, Doc("The Docker image to use for the container")] = "jenkins/jenkins:lts-jdk17",
+        plugins_file: Annotated[dagger.File | None, Doc("A file with the jenkins plugins to install")] = None,
+        casc_file: Annotated[
+            dagger.File | None,
+            Doc("A file with the Jenkins Configuration as Code (JCasC)"),
+        ] = None,
+        ca_files: Annotated[
+            list[dagger.File] | None,
+            Doc("Additional CA certificate files to use for the Jenkins server"),
+        ] = None,
+        port: Annotated[int, Doc("The port to expose the Jenkins server on")] = 8080,
     ) -> Self:
 
         ctr = dag.container().from_(image)
@@ -81,15 +85,17 @@ class Jenkins:
 
         ctr = ctr.with_user("jenkins:jenkins")
         if plugins_file is not None:
-            ctr = (
-                ctr.with_file("/usr/share/jenkins/ref/plugins.txt", plugins_file)
-                .with_exec(["jenkins-plugin-cli", "--plugin-file", "/usr/share/jenkins/ref/plugins.txt"])
+            ctr = ctr.with_file("/usr/share/jenkins/ref/plugins.txt", plugins_file).with_exec(
+                [
+                    "jenkins-plugin-cli",
+                    "--plugin-file",
+                    "/usr/share/jenkins/ref/plugins.txt",
+                ]
             )
 
         if casc_file is not None:
-            ctr = (
-                ctr.with_env_variable("CASC_JENKINS_CONFIG", "/var/jenkins_home/casc.yaml")
-                .with_file("/var/jenkins_home/casc.yaml", casc_file)
+            ctr = ctr.with_env_variable("CASC_JENKINS_CONFIG", "/var/jenkins_home/casc.yaml").with_file(
+                "/var/jenkins_home/casc.yaml", casc_file
             )
 
         ctr = (

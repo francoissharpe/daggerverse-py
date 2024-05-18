@@ -35,28 +35,18 @@ class MkdocsMaterial:
         image: Annotated[
             str | None, Doc("The Docker image to use for the container")
         ] = "squidfunk/mkdocs-material:latest",
-        mkdocs_yaml: Annotated[
-            dagger.File | None, Doc("The path to the MkDocs configuration file")
-        ] = None,
-        docs: Annotated[
-            dagger.Directory | None, Doc("The path to the docs directory")
-        ] = None,
-        src: Annotated[
-            dagger.Directory | None, Doc("The path to the source files")
-        ] = None,
+        mkdocs_yaml: Annotated[dagger.File | None, Doc("The path to the MkDocs configuration file")] = None,
+        docs: Annotated[dagger.Directory | None, Doc("The path to the docs directory")] = None,
+        src: Annotated[dagger.Directory | None, Doc("The path to the source files")] = None,
     ) -> Self:
         """Returns a container with the built MkDocs Material site"""
         self.ctr = dag.container().from_(image)
         if src is not None:
             self.ctr = self.ctr.with_directory(WORKDIR, src)
         elif docs is not None and mkdocs_yaml is not None:
-            self.ctr = self.ctr.with_directory(f"{WORKDIR}/", docs).with_file(
-                f"{WORKDIR}/mkdocs.yml", mkdocs_yaml
-            )
+            self.ctr = self.ctr.with_directory(f"{WORKDIR}/", docs).with_file(f"{WORKDIR}/mkdocs.yml", mkdocs_yaml)
         else:
-            raise ValueError(
-                "Either --src or both --docs and --mkdocs-yaml must be provided"
-            )
+            raise ValueError("Either --src or both --docs and --mkdocs-yaml must be provided")
         self.ctr = self.ctr.with_exec(["build"])
         self.site = self.ctr.directory(f"{WORKDIR}/site")
         return self
@@ -64,13 +54,7 @@ class MkdocsMaterial:
     @function
     def with_nginx(
         self,
-        image: Annotated[
-            str | None, Doc("The Docker image to use for the container")
-        ] = "nginx:latest",
+        image: Annotated[str | None, Doc("The Docker image to use for the container")] = "nginx:latest",
     ) -> dagger.Container:
         """Returns a Nginx container serving the MkDocs Material site"""
-        return (
-            dag.container()
-            .from_(image)
-            .with_directory("/usr/share/nginx/html", self.site)
-        )
+        return dag.container().from_(image).with_directory("/usr/share/nginx/html", self.site)
